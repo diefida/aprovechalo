@@ -1,4 +1,6 @@
 import random
+from datetime import datetime
+from datetime import timedelta
 
 from persistence import Configuration
 from persistence import DatabaseManager
@@ -7,7 +9,7 @@ from model import Offer
 from model import Product
 from model import Store
 
-CONFIGURATION_PATH = '/home/diego/workspaces/pycharm/aprovechalo/etc/aprovechalo.conf'
+CONFIGURATION_PATH = './etc/aprovechalo.conf'
 STORES_NUM = 10
 PRODUCTS_PER_STORE = 10
 
@@ -78,8 +80,7 @@ def more_real_creation():
                 longitude=-4.7325059
             ),
         ]
-
-        products_img = {
+        products_dia_img = {
             'Pizza Jamón Queso': 'https://s1.dia.es/medias/hc7/h5a/8830828478494.png',
             'Yogur Griego': 'https://s2.dia.es/medias/hd5/ha3/8821838413854.png',
             'Menestra de verduras': 'https://s0.dia.es/medias/h76/h6e/8822061498398.png',
@@ -102,23 +103,73 @@ def more_real_creation():
             'Habas baby': 'https://s0.dia.es/medias/h5e/h6f/8823714021406.png',
             'Plátano maduro': 'http://cdn0.hoy.com.do/wp-content/uploads/2014/08/PLATANO.jpg',
         }
+        products_common_img = {
+            'Pizza muy rica': 'https://image.freepik.com/foto-gratis/muy-rica-pizza_2536312.jpg',
+            'Manzana': 'https://mejorconsalud.com/wp-content/uploads/2014/06/manzanas.jpg',
+            'Pan': 'https://www.hogarmania.com/archivos/201203/pan-beneficios-salud-668x400x80xX.jpg',
+            'Kiwi': 'http://www.healthline.com/hlcmsresource/images/topic_centers/Food-Nutrition/642x361_IMAGE_1_The_7_Best_Things_About_Kiwis.jpg',
+            'Lechuga': 'http://biotrendies.com/wp-content/uploads/2015/07/lechuga.jpg',
+            'Canónigos': 'http://www.esdemercado.com/images/thumbs/0002995_300.jpeg',
+            'Entrecot': 'http://www.recetasparainutiles.com/sites/www.recetasparainutiles.com/files/8349.jpg?1348222298',
+            'Chorizo': 'http://www.vegajardin.es/456-thickbox/chorizo-sarta.jpg',
+            'Bacalao poco fresco': 'http://www.ecestaticos.com/image/clipping/654/bac6dfb5ecb9d9938151fa81146df205/los-filetes-de-bacalao-salado-suelen-ser-mas-grandes-que-los-que-se-encuentran-frescos-istock.jpg',
+            'Naranjas': 'http://biotrendies.com/wp-content/uploads/2015/07/Naranja1.jpg',
+            'Almejas': 'https://t1.uc.ltmcdn.com/images/4/5/5/img_como_conservar_almejas_frescas_25554_600.jpg',
+            'Oreja': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Orejas_de_cerdo_-_Cerca.jpg/300px-Orejas_de_cerdo_-_Cerca.jpg',
+            'Callos': 'http://www.paxinasgalegas.es/fiestas/imagenes/xxiv-festa-dos-callos-salceda-de-caselas_img197n3t0.jpg',
+            'Atún': 'https://www.ocu.org/-/media/ocu/images/home/alimentacion/alimentos/tests/comparar-atun/500x281_atun.jpg?h=-1&w=-1&la=es-ES&hash=5CEBB1E55D8D95B999CFEE1B17C460915B4A5EFE',
+            'Cordero': 'http://www.comycebaleares.com/galeria/menus/A_carne_cordero_red.jpg',
+            'Lomo de cerdo': 'http://burruezocongelados.es/imagenes/productos/301016.jpg',
+            'Jamón york': 'http://www.abc.es/Media/201401/24/jamon-york--478x270.jpg',
+            'Queso Fresco': 'http://www.gourmetsleuth.com/images/default-source/dictionary/queso-fresco.jpg?sfvrsn=6',
+            'Chopped': 'http://www.embutidoslaseca.com/comprar/UserFiles/Image/up/314.JPG',
+            'Pechuga de pavo': 'https://consejonutricion.files.wordpress.com/2012/07/pechuga_de_pavo.jpg',
+            'Pechuga de pollo': 'https://consejonutricion.files.wordpress.com/2012/07/pechuga_de_pavo.jpg',
+        }
+        products_tuples = []
+
+        for name, url in products_common_img.items():
+            products_tuples.append((name, url))
+
         offers = []
-        for name, url in products_img.items():
+        for name, url in products_dia_img.items():
+            price = round(random.choice(range(20, 30)) / 10.0, 2)
             stores[0].products.append(
                 Product(
                     store=stores[0],
                     name=name,
                     img_url=url,
-                    price="3€"
+                    price="{}€".format(price)
                 )
             )
             offers.append(
                 Offer(
                     product=stores[0].products[-1],
-                    offer_price="2€",
+                    offer_price="{}€".format(round(price - price * 0.3, 2)),
                     store=stores[0]
                 )
             )
+        for store in stores[1:]:
+            for n in range(1, 20):
+                pr = random.choice(products_tuples)
+                price = round(random.choice(range(20, 30)) / 10.0, 2)
+                store.products.append(
+                    Product(
+                        store=store,
+                        name=pr[0],
+                        img_url=pr[1],
+                        price="{}€".format(price)
+                    )
+                )
+                offers.append(
+                    Offer(
+                        product=store.products[-1],
+                        offer_price="{}€".format(round(price - price * 0.3, 2)),
+                        store=store,
+                        when=datetime.now() - timedelta(minutes=random.choice(range(10, 20)))
+                    )
+                )
+
         db.add_all(stores)
         db.add_all(offers)
 

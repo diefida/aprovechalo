@@ -6,6 +6,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm.session import object_session
 from sqlalchemy.sql.sqltypes import Float
 
 from persistence import Base
@@ -24,12 +25,28 @@ class Product(Base):
     price = Column(String(256))
     img_url = Column(String(256))
 
+    @property
+    def offer_price(self):
+        session = object_session(self)
+        query = "SELECT offer_price " \
+                "FROM offer " \
+                "WHERE product_id={}".format(self.id)
+
+        rs = session.execute(query)
+        value = 0
+        for row in rs:
+            for value in row:
+                pass
+
+        return value
+
     def serialize(self, store=True):
         serial_product = {
             "id": self.id,
             "name": self.name,
             "price": self.price,
             "imgUrl": self.img_url,
+            "offerPrice": self.offer_price
         }
         if store:
             serial_product.update({
@@ -77,7 +94,7 @@ class Offer(Base):
     store = relationship('Store', lazy="subquery")
     product_id = Column(Integer, ForeignKey('product.id', onupdate='CASCADE',
                                             ondelete='CASCADE'))
-    product = relationship('Product', lazy="subquery")
+    product = relationship('Product', foreign_keys=[product_id])
     when = Column(DateTime,
                   default=datetime.utcnow,
                   nullable=False)
@@ -87,7 +104,7 @@ class Offer(Base):
         serial_offer = {
             "id": self.id,
             "offerPrice": self.offer_price,
-            "when": (self.when - datetime(1970, 1, 1)).total_seconds()
+            "when": (self.when - datetime(1970, 1, 1)).total_seconds() * 1000
         }
         if product:
             serial_offer.update({
@@ -99,4 +116,3 @@ class Offer(Base):
                 "store": self.store.serialize(products=False),
             })
         return serial_offer
-

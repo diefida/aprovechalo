@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask import request
+from sqlalchemy.sql.expression import desc
 
 from model import Store
 from model import Offer
@@ -7,7 +8,7 @@ from model import Offer
 from persistence import Configuration
 from persistence import DatabaseManager
 
-CONFIGURATION_PATH = './etc/aprovechalo.conf'
+CONFIGURATION_PATH = '/home/diego/workspaces/pycharm/aprovechalo/etc/aprovechalo.conf'
 
 
 configuration = Configuration(CONFIGURATION_PATH)
@@ -27,7 +28,7 @@ def index():
 @app.route('/offers', methods=['GET'])
 def get_offers():
     with dm.session_scope() as db:
-        offers = db.query(Offer).all()
+        offers = db.query(Offer).order_by(desc(Offer.when)).all()
         reply = [o.serialize() for o in offers]
 
         return jsonify(reply)
